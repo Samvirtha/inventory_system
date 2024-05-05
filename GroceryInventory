@@ -1,0 +1,89 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from statsmodels.tsa.arima.model import ARIMA
+
+class GroceryInventory:
+    def __init__(self):
+        self.inventory = {}
+        self.sales_data = []
+
+    def add_item(self, item, quantity):
+        if item in self.inventory:
+            self.inventory[item]["stock"] += quantity
+        else:
+            self.inventory[item] = {"stock": quantity, "sales": 0}
+        print(f"{quantity} {item}(s) added to inventory.")
+
+    def remove_item(self, item, quantity):
+        if item in self.inventory:
+            if self.inventory[item]["stock"] >= quantity:
+                self.inventory[item]["stock"] -= quantity
+                self.inventory[item]["sales"] += quantity
+                print(f"{quantity} {item}(s) removed from inventory.")
+                self.sales_data.append(quantity)
+            else:
+                print("Insufficient quantity in inventory.")
+        else:
+            print("Item not found in inventory.")
+
+    def view_inventory(self):
+        if self.inventory:
+            print("Current Inventory:")
+            for item, details in self.inventory.items():
+                print(f"{item}: Stock - {details['stock']}, Sales - {details['sales']}")
+        else:
+            print("Inventory is empty.")
+
+    def plot_sales_forecast(self):
+        if self.sales_data:
+            # Fit ARIMA model
+            model = ARIMA(self.sales_data, order=(1, 1, 1))  # Example order, you may need to tune this
+            fit_model = model.fit()
+
+            # Forecast next 12 months
+            forecast = fit_model.forecast(steps=12)
+
+            # Plot forecast
+            plt.figure(figsize=(10, 6))
+            plt.plot(range(1, len(self.sales_data) + 1), self.sales_data, label='Historical Sales')
+            plt.plot(range(len(self.sales_data) + 1, len(self.sales_data) + 13), forecast, label='Forecasted Sales')
+            plt.title('Sales Forecast for Next 12 Months')
+            plt.xlabel('Month')
+            plt.ylabel('Sales')
+            plt.legend()
+            plt.grid(True)
+            plt.show()
+        else:
+            print("No sales data available.")
+
+if __name__ == "__main__":
+    inventory_app = GroceryInventory()
+    while True:
+        print("\nWelcome to the Grocery Inventory App!")
+        print("1. Add item to inventory")
+        print("2. Remove item from inventory")
+        print("3. View inventory")
+        print("4. Plot sales forecast for next 12 months")
+        print("5. Exit")
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            item = input("Enter the item name: ")
+            quantity = int(input("Enter the quantity to add: "))
+            inventory_app.add_item(item, quantity)
+        elif choice == "2":
+            item = input("Enter the item name: ")
+            quantity = int(input("Enter the quantity to remove: "))
+            inventory_app.remove_item(item, quantity)
+        elif choice == "3":
+            inventory_app.view_inventory()
+        elif choice == "4":
+            inventory_app.plot_sales_forecast()
+        elif choice == "5":
+            print("Thank you for using the Grocery Inventory App!")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+
